@@ -1,2 +1,2 @@
 # cfdi2excel
-Programa para transformar CFDI a Excel
+Programa para transformar una carpeta con CFDI a Excel
