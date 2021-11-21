@@ -12,6 +12,7 @@ NSMAP = {
     'cfdi': 'http://www.sat.gob.mx/cfd/3',
     'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital',
     'implocal': 'http://www.sat.gob.mx/implocal',
+    'pago10': 'http://www.sat.gob.mx/Pagos',
 }
 
 
@@ -114,9 +115,11 @@ class MainApplication(Frame):
 
         wb = Workbook()
 
-        sheet = wb.active
+        #sheet = wb.active
+        cfdis_sheet = wb.create_sheet(title='CFDIs')
+        pagos_sheet = wb.create_sheet(title="Pagos")
 
-        sheet.append(
+        cfdis_sheet.append(
             (
                 'Version', 'UUID', 'Serie', 'Folio', 'Tipo', 'Fecha emision',
                 'Fecha certificacion', 'pacCertifico', 'RFC emisor', 'Razon emisor',
@@ -124,6 +127,36 @@ class MainApplication(Frame):
                 'Tipo de cambio', 'Metodo pago', 'Forma pago', 'SubTotal', 'Descuento',
                 'IVA Trasladado', 'ISR Trasladado', 'IEPS Trasladado', 'IVA Retenido',
                 'ISR Retenido', 'Impuesto Local', 'Total', 'TipoRelacion', 'CfdiRelacionados',
+            )
+        )
+        pagos_sheet.append(
+            (
+                'Version', 'UUID', 'Serie', 'Folio', 'Tipo', 'Fecha emision',
+                'Fecha certificacion', 'pacCertifico', 'RFC emisor', 'Razon emisor',
+                'RFC receptor', 'Razon receptor', 'Conceptos', 'Uso CFDI', 'Moneda',
+                'Tipo de cambio', 'Metodo pago', 'Forma pago', 'SubTotal', 'Descuento',
+                'IVA Trasladado', 'ISR Trasladado', 'IEPS Trasladado', 'IVA Retenido',
+                'ISR Retenido', 'Impuesto Local', 'Total', 'TipoRelacion', 'CfdiRelacionados',
+                # pago10:Pago
+                'FechaPago',
+                'FormaDePagoP',
+                'MonedaP',
+                'Monto',
+                'RfcEmisorCtaOrd',
+                'NomBancoOrdExt',
+                'CtaOrdenante',
+                'RfcEmisorCtaBen',
+                'CtaBeneficiario',
+                'NumOperacion',
+                # pago10:DoctoRelacionado
+                'IdDocumento',
+                'Folio',
+                'MonedaDR',
+                'MetodoDePagoDR',
+                'NumParcialidad',
+                'ImpSaldoAnt',
+                'ImpPagado',
+                'ImpSaldoInsoluto',
             )
         )
 
@@ -210,7 +243,7 @@ class MainApplication(Frame):
                 iva = 0.0
                 isr = 0.0
                 ieps = 0.0
-                for t in root.findall('cfdi:Impuestos/cfdi:Traslados/cfdi:Traslado', namespaces=NSMAP):                    
+                for t in root.findall('cfdi:Impuestos/cfdi:Traslados/cfdi:Traslado', namespaces=NSMAP):
                     if t.get('Impuesto') == '002':
                         iva += float(t.get('Importe'))
                     if t.get('Impuesto') == '001':
@@ -227,37 +260,68 @@ class MainApplication(Frame):
                         isr_ret += float(t.get('Importe'))
 
                 total = root.get('Total')
-                
+
                 tipo_relacion = ''
                 relaciones = ''
 
-                cfdi_relacionados = root.find('cfdi:CfdiRelacionados', namespaces=NSMAP)
-                
+                cfdi_relacionados = root.find(
+                    'cfdi:CfdiRelacionados', namespaces=NSMAP)
+
                 if cfdi_relacionados is not None:
-                    
+
                     tipo_relacion = cfdi_relacionados.get('TipoRelacion')
 
                     for r in cfdi_relacionados.findall('cfdi:CfdiRelacionado', namespaces=NSMAP):
-                        relaciones += '{}, '.format(                        
+                        relaciones += '{}, '.format(
                             r.get('UUID')
                         )
-                
+
                 implocal = 0
 
                 for t in root.findall('cfdi:Complemento/implocal:ImpuestosLocales/implocal:TrasladosLocales', namespaces=NSMAP):
                     implocal += float(t.get('Importe'))
 
-                sheet.append(
-                    (
+                cfdis_sheet.append((
+                    version, uuid, serie, folio, tipo, fecha,
+                    fecha_timbrado, pac, rfc_emisor, nombre_emisor,
+                    rfc_receptor, nombre_receptor, conceptos, uso, moneda,
+                    tipo_cambio, metodo_pago, forma_pago, subtotal, descuento,
+                    iva, isr, ieps, iva_ret, isr_ret, implocal, total, tipo_relacion, relaciones
+                ))
+
+                for docto_relacionado in root.findall('cfdi:Complemento/pago10:Pagos/pago10:Pago/pago10:DoctoRelacionado', namespaces=NSMAP):
+                    pago = docto_relacionado.getparent()
+
+                    pagos_sheet.append((
                         version, uuid, serie, folio, tipo, fecha,
                         fecha_timbrado, pac, rfc_emisor, nombre_emisor,
                         rfc_receptor, nombre_receptor, conceptos, uso, moneda,
                         tipo_cambio, metodo_pago, forma_pago, subtotal, descuento,
-                        iva, isr, ieps, iva_ret, isr_ret, implocal, total, tipo_relacion, relaciones
-                    )
-                )
+                        iva, isr, ieps, iva_ret, isr_ret, implocal, total, tipo_relacion, relaciones,
+                        # pago10:Pago
+                        pago.get('FechaPago'),
+                        pago.get('FormaDePagoP'),
+                        pago.get('MonedaP'),
+                        pago.get('Monto'),
+                        pago.get('RfcEmisorCtaOrd'),
+                        pago.get('NomBancoOrdExt'),
+                        pago.get('CtaOrdenante'),
+                        pago.get('RfcEmisorCtaBen'),
+                        pago.get('CtaBeneficiario'),
+                        pago.get('NumOperacion'),
+                        # pago10:DoctoRelacionado
+                        docto_relacionado.get('IdDocumento'),
+                        docto_relacionado.get('Folio'),
+                        docto_relacionado.get('MonedaDR'),
+                        docto_relacionado.get('MetodoDePagoDR'),
+                        docto_relacionado.get('NumParcialidad'),
+                        docto_relacionado.get('ImpSaldoAnt'),
+                        docto_relacionado.get('ImpPagado'),
+                        docto_relacionado.get('ImpSaldoInsoluto'),
+                    ))
+
             except Exception as e:
-                sheet.append((str(e), ))
+                cfdis_sheet.append((str(e), ))
 
         file_path = os.path.join(destino_path, 'cfdis.xlsx')
 
