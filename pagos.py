@@ -15,6 +15,12 @@ NSMAP = {
     'pago10': 'http://www.sat.gob.mx/Pagos',
 }
 
+NSMAP_V4 = {
+    'cfdi': 'http://www.sat.gob.mx/cfd/4',
+    'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital',
+    'implocal': 'http://www.sat.gob.mx/implocal',
+    'pago10': 'http://www.sat.gob.mx/Pagos',
+}
 
 class MainApplication(Frame):
     def __init__(self, master, *args, **kwargs):
@@ -171,6 +177,9 @@ class MainApplication(Frame):
                     huge_tree=True, recover=True)).getroot()
 
                 version = root.get('Version')
+
+                if version == '4.0':
+                    NSMAP.update(NSMAP_V4)
 
                 uuid = root.find(
                     'cfdi:Complemento/tfd:TimbreFiscalDigital',
