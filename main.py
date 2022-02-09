@@ -169,7 +169,6 @@ class MainApplication(Frame):
 
         for f in files:
             try:
-
                 self.lbl_estado['text'] = 'Procesando: {}'.format(f)
 
                 root = etree.parse(
@@ -179,11 +178,13 @@ class MainApplication(Frame):
                 version = root.get('Version')
 
                 if version == '4.0':
-                    NSMAP.update(NSMAP_V4)
+                    nsmap = NSMAP_V4
+                else:
+                    nsmap = NSMAP
 
                 uuid = root.find(
                     'cfdi:Complemento/tfd:TimbreFiscalDigital',
-                    namespaces=NSMAP
+                    namespaces=nsmap
                 ).get('UUID')
 
                 serie = root.get('Serie')
@@ -196,37 +197,37 @@ class MainApplication(Frame):
 
                 fecha_timbrado = root.find(
                     'cfdi:Complemento/tfd:TimbreFiscalDigital',
-                    namespaces=NSMAP
+                    namespaces=nsmap
                 ).get('FechaTimbrado')
 
                 pac = root.find(
                     'cfdi:Complemento/tfd:TimbreFiscalDigital',
-                    namespaces=NSMAP
+                    namespaces=nsmap
                 ).get('RfcProvCertif')
 
                 rfc_emisor = root.find(
                     'cfdi:Emisor',
-                    namespaces=NSMAP
+                    namespaces=nsmap
                 ).get('Rfc')
 
                 nombre_emisor = root.find(
                     'cfdi:Emisor',
-                    namespaces=NSMAP
+                    namespaces=nsmap
                 ).get('Nombre')
 
                 rfc_receptor = root.find(
                     'cfdi:Receptor',
-                    namespaces=NSMAP
+                    namespaces=nsmap
                 ).get('Rfc')
 
                 nombre_receptor = root.find(
                     'cfdi:Receptor',
-                    namespaces=NSMAP
+                    namespaces=nsmap
                 ).get('Nombre')
 
                 conceptos = ''
 
-                for i, c in enumerate(root.findall('cfdi:Conceptos/cfdi:Concepto', namespaces=NSMAP)):
+                for i, c in enumerate(root.findall('cfdi:Conceptos/cfdi:Concepto', namespaces=nsmap)):
                     conceptos += '|-{}-|: {}: {} '.format(
                         i + 1,
                         c.get('Descripcion'),
@@ -235,7 +236,7 @@ class MainApplication(Frame):
 
                 uso = root.find(
                     'cfdi:Receptor',
-                    namespaces=NSMAP
+                    namespaces=nsmap
                 ).get('UsoCFDI')
 
                 moneda = root.get('Moneda')
@@ -253,7 +254,7 @@ class MainApplication(Frame):
                 iva = 0.0
                 isr = 0.0
                 ieps = 0.0
-                for t in root.findall('cfdi:Impuestos/cfdi:Traslados/cfdi:Traslado', namespaces=NSMAP):
+                for t in root.findall('cfdi:Impuestos/cfdi:Traslados/cfdi:Traslado', namespaces=nsmap):
                     if t.get('Impuesto') == '002':
                         iva += float(t.get('Importe'))
                     if t.get('Impuesto') == '001':
@@ -263,7 +264,7 @@ class MainApplication(Frame):
 
                 iva_ret = 0
                 isr_ret = 0
-                for t in root.findall('cfdi:Impuestos/cfdi:Retenciones/cfdi:Retencion', namespaces=NSMAP):
+                for t in root.findall('cfdi:Impuestos/cfdi:Retenciones/cfdi:Retencion', namespaces=nsmap):
                     if t.get('Impuesto') == '002':
                         iva_ret += float(t.get('Importe'))
                     if t.get('Impuesto') == '001':
@@ -275,20 +276,20 @@ class MainApplication(Frame):
                 relaciones = ''
 
                 cfdi_relacionados = root.find(
-                    'cfdi:CfdiRelacionados', namespaces=NSMAP)
+                    'cfdi:CfdiRelacionados', namespaces=nsmap)
 
                 if cfdi_relacionados is not None:
 
                     tipo_relacion = cfdi_relacionados.get('TipoRelacion')
 
-                    for r in cfdi_relacionados.findall('cfdi:CfdiRelacionado', namespaces=NSMAP):
+                    for r in cfdi_relacionados.findall('cfdi:CfdiRelacionado', namespaces=nsmap):
                         relaciones += '{}, '.format(
                             r.get('UUID')
                         )
 
                 implocal = 0
 
-                for t in root.findall('cfdi:Complemento/implocal:ImpuestosLocales/implocal:TrasladosLocales', namespaces=NSMAP):
+                for t in root.findall('cfdi:Complemento/implocal:ImpuestosLocales/implocal:TrasladosLocales', namespaces=nsmap):
                     implocal += float(t.get('Importe'))
 
                 cfdis_sheet.append((
@@ -299,7 +300,7 @@ class MainApplication(Frame):
                     iva, isr, ieps, iva_ret, isr_ret, implocal, total, tipo_relacion, relaciones
                 ))
 
-                for docto_relacionado in root.findall('cfdi:Complemento/pago10:Pagos/pago10:Pago/pago10:DoctoRelacionado', namespaces=NSMAP):
+                for docto_relacionado in root.findall('cfdi:Complemento/pago10:Pagos/pago10:Pago/pago10:DoctoRelacionado', namespaces=nsmap):
                     pago = docto_relacionado.getparent()
 
                     pagos_sheet.append((
