@@ -19,8 +19,9 @@ NSMAP_V4 = {
     'cfdi': 'http://www.sat.gob.mx/cfd/4',
     'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital',
     'implocal': 'http://www.sat.gob.mx/implocal',
-    'pago10': 'http://www.sat.gob.mx/Pagos',
+    'pago20': 'http://www.sat.gob.mx/Pagos20',
 }
+
 
 class MainApplication(Frame):
     def __init__(self, master, *args, **kwargs):
@@ -169,8 +170,8 @@ class MainApplication(Frame):
         )
 
         for f in files:
-            try:
-
+            # try:
+            if True:
                 self.lbl_estado['text'] = 'Procesando: {}'.format(f)
 
                 root = etree.parse(f, parser=etree.XMLParser(
@@ -180,8 +181,10 @@ class MainApplication(Frame):
 
                 if version == '4.0':
                     nsmap = NSMAP_V4
+                    pagonsmap = 'pago20'
                 else:
                     nsmap = NSMAP
+                    pagonsmap = 'pago10'
 
                 uuid = root.find(
                     'cfdi:Complemento/tfd:TimbreFiscalDigital',
@@ -295,7 +298,7 @@ class MainApplication(Frame):
 
                 pago_documento_relaciones = ''
                 pago_documento_relacionados = root.find(
-                    'cfdi:Complemento/pago10:Pagos/pago10:Pago', namespaces=nsmap
+                    f'cfdi:Complemento/{pagonsmap}:Pagos/{pagonsmap}:Pago', namespaces=nsmap
                 )
                 if pago_documento_relacionados is not None:
                     cuenta_ordenante = pago_documento_relacionados.get(
@@ -313,7 +316,7 @@ class MainApplication(Frame):
                         'FormaDePagoP')
                     fecha_pago = pago_documento_relacionados.get('FechaPago')
                     monto = pago_documento_relacionados.get('Monto')
-                    for r in pago_documento_relacionados.findall('pago10:DoctoRelacionado', namespaces=nsmap):
+                    for r in pago_documento_relacionados.findall(f'{pagonsmap}:DoctoRelacionado', namespaces=nsmap):
                         pago_documento_relaciones += '{}, '.format(
                             r.get('IdDocumento')
                         )
@@ -345,35 +348,36 @@ class MainApplication(Frame):
                         pago_documento_relaciones,  # 'Relacionados',
                         'NomBancoExt',
                         'RfcEmisorCtaOrd',
-                        cuenta_ordenante,  # 'CtaOrdenante',
-                        rfc_emisor_cuenta_ben,  # 'RfcEmisorCtaBen',
-                        cuenta_beneficiario,  # 'CtaBeneficiario',
+                        cuenta_ordenante if 'cuenta_ordenante' in locals() else "",  # 'CtaOrdenante',
+                        rfc_emisor_cuenta_ben if 'rfc_emisor_cuenta_ben' in locals(
+                        ) else "",  # 'RfcEmisorCtaBen',
+                        cuenta_beneficiario if 'cuenta_beneficiario' in locals() else '',  # 'CtaBeneficiario',
                         'TipoCadPago',
                         'CadPago',
-                        numero_operacion,  # 'Número operación',
-                        moneda_pago,  # 'MonedaP',
-                        tipo_cambio_pago,  # 'TipoCambioP',
-                        forma_de_pago_pago,  # 'FormaDePagoP',
-                        fecha_pago,  # 'Fecha pago',
-                        monto,  # 'Monto',
-                        id_dr,  # 'Id documento',
+                        numero_operacion if 'numero_operacion' in locals() else '',  # 'Número operación',
+                        moneda_pago if 'moneda_pago' in locals() else '',  # 'MonedaP',
+                        tipo_cambio_pago if 'tipo_cambio_pago' in locals() else '',  # 'TipoCambioP',
+                        forma_de_pago_pago if 'forma_de_pago_pago' in locals() else '',  # 'FormaDePagoP',
+                        fecha_pago if 'fecha_pago' in locals()else'',  # 'Fecha pago',
+                        monto if 'monto' in locals() else'',  # 'Monto',
+                        id_dr if 'id_dr' in locals() else "",  # 'Id documento',
                         'Estatus (Almacen)',
                         'Fecha emision (Doc)',
                         'Fecha certificacion (Doc)',
                         'Fecha cancelacion (Doc)',
-                        serie_dr,  # 'Serie',
-                        folio_dr,  # 'Folio',
-                        moneda_dr,  # 'MonedaDR',
-                        tipo_cambio_dr,  # 'TipoCambioDR',
-                        metodo_de_pago_dr,  # 'MetodoDePagoDR',
-                        numero_parcialidad,  # 'NumParcialidad',
-                        saldo_anterior,  # 'Saldo anterior',
-                        importe_pagado,  # 'Importe pagado',
-                        saldo_actual,  # 'Saldo actual'
+                        serie_dr if 'serie_dr' in locals() else '',  # 'Serie',
+                        folio_dr if 'folio_dr' in locals() else '',  # 'Folio',
+                        moneda_dr if 'moneda_dr' in locals() else '',  # 'MonedaDR',
+                        tipo_cambio_dr if 'tipo_cambio_dr' in locals() else '',  # 'TipoCambioDR',
+                        metodo_de_pago_dr if 'metodo_de_pago_dr' in locals() else '',  # 'MetodoDePagoDR',
+                        numero_parcialidad if 'numero_parcialidad' in locals() else '',  # 'NumParcialidad',
+                        saldo_anterior if 'saldo_anterior' in locals() else '',  # 'Saldo anterior',
+                        importe_pagado if 'importe_pagado' in locals() else '',  # 'Importe pagado',
+                        saldo_actual if 'saldo_actual' in locals() else '',  # 'Saldo actual'
                     )
                 )
-            except Exception as e:
-                sheet.append((str(e), ))
+            # except Exception as e:
+            #     sheet.append((str(e), ))
 
         file_path = os.path.join(destino_path, 'cfdis.xlsx')
 
